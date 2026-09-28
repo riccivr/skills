@@ -4,7 +4,7 @@ Agent skills for coding assistants, LLMs, and AI agents. One directory per skill
 
 | Skill | What it does |
 | --- | --- |
-| [`drill-me`](./drill-me/SKILL.md) | The reverse of Matt Pocock's `grill-me`. The model reads up on a ticket, PR, epic, or subsystem, then interrogates *you* about it so the concepts stick through retrieval practice instead of a summary you'll forget by lunchtime. |
+| [`drill-me`](./drill-me/SKILL.md) | The reverse of Matt Pocock's `grill-me`. The model reads up on a ticket, PR, epic, or subsystem, then interrogates *you* about it so the concepts stick through retrieval practice instead of a summary you'll forget by lunchtime. Concludes with an overall score, per-question score reasoning, and a domain explanation debrief. |
 
 ## Setup
 

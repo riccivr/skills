@@ -1,6 +1,6 @@
 ---
 name: drill-me
-description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Use whenever the user says drill me, quiz me, test me, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
+description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Concludes with an overall score, scoring reasoning for each question, and a domain explanation debrief. Use whenever the user says drill me, quiz me, test me, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
 argument-hint: "[ticket key | PR number | path | nothing for the current branch] [--quick | --deep]"
 ---
 
@@ -69,7 +69,7 @@ Q4 (how). <next question>
 - **"Don't know", second time.** The answer, then requeue.
 - **The user disagrees with your key.** Go back to the source before insisting. If they were right, say so and fix the map. Your read is the answer key only as long as it survives contact with the code.
 
-Keep your text short. If a turn has more of your words than the user's, the drill is turning into a lecture.
+Keep your text short. If a turn has more of your words than the user's, the drill is turning into a lecture. Save the full domain explanations and detailed scoring breakdown for the close.
 
 ## 4. Depth
 
@@ -83,18 +83,41 @@ Stop early if the user asks. Still do the close.
 
 Finish with the Feynman test. Ask the user to explain the whole subject back in five sentences, as if to a colleague picking it up tomorrow. Check it against the concept map for what is missing, what is wrong, and what is right but in the wrong order.
 
-Then produce the only summary of the session:
+Then produce the final session report with an overall score, a question-by-question breakdown explaining every score and its domain context, and the cheat sheet.
+
+### Scoring rules
+
+- **Right (1.0):** User retrieved the core mechanism or cause cleanly on the first ask.
+- **Partly (0.5):** User retrieved part of the mechanism but missed a required piece or needed a hint.
+- **Wrong (0.0):** User missed the concept, guessed incorrectly, or gave up. Requeued attempts that pass can earn back up to 0.5 for recovery, but note the initial miss.
+- Calculate the final score as total points earned divided by total points possible, expressed as both a fraction and a percentage. Include a one-sentence assessment of readiness to touch the code.
+
+### Report format
 
 ```
 ## Drill: <subject>
 
-Missed first time: <concepts, one line each, with the citation>
+Overall score: <X/Y> (<percentage>%)
+Readiness: <one sentence assessment based on the score and missed concepts>
+
+### Breakdown
+
+#### Q1 (<level>): <question summary or concept name>
+- **Score:** ✅ Right (1.0/1.0) | 🟡 Partly (0.5/1.0) | ❌ Wrong (0.0/1.0)
+- **Score reasoning:** <why this score was awarded, contrasting what the user said against the required concept>
+- **Domain explanation:** <the model's thorough explanation of how this part of the domain works, the underlying mechanisms, why it was built this way, and citations (file:line, ticket, or PR)>
+
+[Repeat for every question asked]
+
+### Summary
+
+Missed first time: <concepts, one line each, with citations>
 Got straight away: <concepts>
-Cheat sheet: <every concept in dependency order, one line each, with the citation>
+Cheat sheet: <every concept in dependency order, one line each, with citations>
 Not asked because I wasn't sure: <anything dropped from the bank, if any>
 ```
 
-The cheat sheet is the one place a full explanation is allowed. It comes after the user has done the work, so it lands on top of retrieval instead of replacing it. Where a persistent memory or notes directory exists, offer to record the missed concepts so a later drill on the same subject starts where the user was weak.
+The close is where full explanations belong. They land on top of retrieval instead of replacing it. Where a persistent memory or notes directory exists, offer to record the missed concepts so a later drill on the same subject starts where the user was weak.
 
 ## What this skill is not
 
