@@ -4,7 +4,7 @@ Agent skills for coding assistants, LLMs, and AI agents. One directory per skill
 
 | Skill | What it does |
 | --- | --- |
-| [`drill-me`](./drill-me/SKILL.md) | The reverse of Matt Pocock's `grill-me`. The model reads up on a ticket, PR, epic, or subsystem, then interrogates *you* about it so the concepts stick through retrieval practice instead of a summary you'll forget by lunchtime. Supports open-ended and multi-option questions with Claude Code CLI and Desktop interactive pickers, ending with a score, score reasoning, and a domain debrief. |
+| [`drill-me`](./drill-me/SKILL.md) | The reverse of Matt Pocock's `grill-me`. The model reads up on a ticket, PR, epic, or subsystem, then interrogates *you* about it so the concepts stick through retrieval practice instead of a summary you'll forget by lunchtime. Features standard open-ended retrieval and an interactive questionnaire mode with Claude Code CLI and Desktop pickers, ending with a score, score reasoning, and a domain debrief. |
 
 ## Setup
 
@@ -32,7 +32,7 @@ ln -s ~/code/skills/drill-me ~/.gemini/antigravity/skills/drill-me
 ln -s ~/code/skills/drill-me <repo>/.gemini/skills/drill-me
 ```
 
-Run with `/drill-me ENROLY-1234`, `/drill-me 7905`, `/drill-me src/billing`, or bare `/drill-me` on the current branch. Add `--options` to use multi-option questions with interactive pickers in Claude Code CLI and Desktop. Add `--quick` or `--deep` to adjust depth.
+Run with `/drill-me ENROLY-1234`, `/drill-me 7905`, `/drill-me src/billing`, or bare `/drill-me` on the current branch. Add `--questionnaire` to run in questionnaire mode with interactive option pickers in Claude Code CLI and Desktop. Add `--quick` or `--deep` to adjust depth.
 
 ### Rule-based tools (Cursor, Windsurf, Cline, Copilot)
 
@@ -53,7 +53,7 @@ To use it in a conversation, share the ticket, code, or PR diff and say:
 
 > Drill me on this.
 
-Add `--quick` (5 questions) or `--deep` (until edge cases pass) if needed.
+Add `--questionnaire` to run in questionnaire mode, or `--quick` / `--deep` to adjust depth.
 
 ## Credit
 

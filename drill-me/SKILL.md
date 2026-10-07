@@ -1,7 +1,7 @@
 ---
 name: drill-me
-description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Supports open-ended and multi-option questions with interactive picker support in Claude Code CLI and Desktop. Concludes with an overall score, scoring reasoning for each question, and a domain explanation debrief. Use whenever the user says drill me, quiz me, test me, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
-argument-hint: "[ticket key | PR number | path | nothing for the current branch] [--quick | --deep] [--options]"
+description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Features a full questionnaire mode with interactive multi-question pickers in Claude Code CLI and Desktop. Concludes with an overall score, scoring reasoning for each question, and a domain explanation debrief. Use whenever the user says drill me, quiz me, test me, questionnaire, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
+argument-hint: "[ticket key | PR number | path | nothing for the current branch] [--questionnaire] [--quick | --deep]"
 ---
 
 # Drill me
@@ -35,9 +35,12 @@ One question per turn. Grilling asks a whole frontier in one round. This does no
 
 Each concept climbs a ladder: **what** it is, **why** it exists, **how** it works, **what if** it is bent (an edge case, a failure mode, a change). Start at "what" for the root concept. Two clean hits in a row at a level means skip up a level or on to the next concept. A miss means stay at that level and hint.
 
-### Question styles
+### Question formats
 
-Questions can be open-ended or multi-option. Use multi-option questions when `--options` is passed, when the user asks for choices, or to keep turns snappy.
+Questions can be open-ended or multi-option:
+
+- **Standard format.** Open-ended prompt where the user explains the answer in their own words.
+- **Questionnaire mode (`--questionnaire`).** A full multi-option quiz format. Every question gives the user choices to pick from.
 
 When asking multi-option questions:
 
@@ -86,19 +89,27 @@ Q4 (how). <next question>
 
 - **Right.** One line at most. No praise, no "and also". Praise and elaboration are both you talking when they should be.
 - **Partly.** Name the missing piece, not the whole answer.
-- **Wrong.** The correct answer with its citation. If multi-option, note why the selected distractor failed. Then **requeue the concept** and ask it again later in the session in a different form, a what-if instead of a how. One correction does not fix a wrong answer. A second retrieval later does.
-- **"Don't know", first time.** A hint, not the answer. Narrow the space, point at a file to open, or present the question with options so the user can reason through choices.
+- **Wrong.** The correct answer with its citation. In questionnaire mode, note why the selected option failed. Then **requeue the concept** and ask it again later in the session in a different form, a what-if instead of a how. One correction does not fix a wrong answer. A second retrieval later does.
+- **"Don't know", first time.** A hint, not the answer. Narrow the space, point at a file to open, or narrow down the options.
 - **"Don't know", second time.** The answer, then requeue.
 - **The user disagrees with your key.** Go back to the source before insisting. If they were right, say so and fix the map. Your read is the answer key only as long as it survives contact with the code.
 
 Keep your text short. If a turn has more of your words than the user's, the drill is turning into a lecture. Save the full domain explanations and detailed scoring breakdown for the close.
 
-## 4. Depth
+## 4. Modes and depth
+
+### Modes
+
+- **Standard (default).** Open-ended questions that force active recall from scratch. Best when preparing to write implementation code.
+- **Questionnaire (`--questionnaire`).** A full multiple-choice mode. Every turn presents an interactive multi-option question using Claude Code CLI and Desktop's native picker (`AskUserQuestion`) or `ask_question`. The user selects one option to proceed. Best for fast knowledge checks, architecture refreshers, or reviewing PRs without typing long responses.
+
+### Depth
 
 - `--quick` asks five questions on root concepts only. Enough for standup.
 - The default asks around ten questions, or stops when every concept has passed once, whichever comes first.
 - `--deep` runs until every concept has passed at the what-if level, requeues included. For the thing the user is about to build or review.
-- `--options` runs questions with multiple choices, triggering interactive question pickers in Claude Code CLI and Desktop.
+
+Modes and depth combine freely: `/drill-me --questionnaire --quick` runs a five-question interactive questionnaire.
 
 Stop early if the user asks. Still do the close.
 
@@ -112,7 +123,7 @@ Then produce the final session report with an overall score, a question-by-quest
 
 - **Right (1.0):** User retrieved the core mechanism cleanly or picked the correct option on the first ask.
 - **Partly (0.5):** User retrieved part of the mechanism, picked an option after a hint, or needed a second attempt.
-- **Wrong (0.0):** User missed the concept, picked an incorrect distractor, or gave up. Requeued attempts that pass can earn back up to 0.5 for recovery, but note the initial miss.
+- **Wrong (0.0):** User missed the concept, picked an incorrect option in questionnaire mode, or gave up. Requeued attempts that pass can earn back up to 0.5 for recovery, but note the initial miss.
 - Calculate the final score as total points earned divided by total points possible, expressed as both a fraction and a percentage. Include a one-sentence assessment of readiness to touch the code.
 
 ### Report format
@@ -127,7 +138,7 @@ Readiness: <one sentence assessment based on the score and missed concepts>
 
 #### Q1 (<level>): <question summary or concept name>
 - **Score:** ✅ Right (1.0/1.0) | 🟡 Partly (0.5/1.0) | ❌ Wrong (0.0/1.0)
-- **Score reasoning:** <why this score was awarded, including which option was selected if multi-choice and why it was right or wrong>
+- **Score reasoning:** <why this score was awarded, including the option selected if in questionnaire mode and why it was right or wrong>
 - **Domain explanation:** <the model's thorough explanation of how this part of the domain works, the underlying mechanisms, why it was built this way, and citations (file:line, ticket, or PR)>
 
 [Repeat for every question asked]
