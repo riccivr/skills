@@ -1,7 +1,7 @@
 ---
 name: drill-me
-description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Concludes with an overall score, scoring reasoning for each question, and a domain explanation debrief. Use whenever the user says drill me, quiz me, test me, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
-argument-hint: "[ticket key | PR number | path | nothing for the current branch] [--quick | --deep]"
+description: "The reverse of grill-me. Interrogate the user about a feature, epic, bug, ticket, PR or subsystem that you have already read up on, so they learn it through retrieval practice instead of reading a summary. You hold the answer key; they do the talking. Supports open-ended and multi-option questions with interactive picker support in Claude Code CLI and Desktop. Concludes with an overall score, scoring reasoning for each question, and a domain explanation debrief. Use whenever the user says drill me, quiz me, test me, make sure I understand, help me soak up or get my head around a ticket / epic / PR / module, or is about to pick up work that someone else shaped. Not for explaining something (that is a walkthrough) and not for stress-testing the user's own plan (that is grilling)."
+argument-hint: "[ticket key | PR number | path | nothing for the current branch] [--quick | --deep] [--options]"
 ---
 
 # Drill me
@@ -35,18 +35,40 @@ One question per turn. Grilling asks a whole frontier in one round. This does no
 
 Each concept climbs a ladder: **what** it is, **why** it exists, **how** it works, **what if** it is bent (an edge case, a failure mode, a change). Start at "what" for the root concept. Two clean hits in a row at a level means skip up a level or on to the next concept. A miss means stay at that level and hint.
 
-Question rules, and why they exist.
+### Question styles
 
-- **Open-ended by default.** Multiple choice is a hint, not a starting point. Recognising an answer is a weaker act than generating one.
+Questions can be open-ended or multi-option. Use multi-option questions when `--options` is passed, when the user asks for choices, or to keep turns snappy.
+
+When asking multi-option questions:
+
+- **Interactive tools in Claude Code CLI and Desktop.** If an interactive question tool is available (`AskUserQuestion` in Claude Code, `ask_question` in Antigravity), invoke it. Claude Code CLI and Claude Desktop present an interactive picker where the user selects an option using arrow keys or a click.
+- **Text fallback.** When no interactive question tool is available, format the choices as a labeled list (A, B, C, D) directly in the turn and prompt the user to pick one.
+- **Option quality.** Write three to four options of balanced length and detail. Never make the correct answer stand out through formatting or verbosity.
+- **Plausible distractors.** Draw distractors from real pitfalls, adjacent subsystems, or common misconceptions in the codebase. Never include joke options.
+- **Write-in answers.** Allow the user to type a custom answer if they disagree with all options or want to elaborate.
+
+### Question rules
+
 - **Never leak the answer in the question.** Naming the mechanism you are about to ask about, or narrating the context up to the answer, turns retrieval into reading.
 - **Ask about behaviour, causes and consequences.** Never about identifier names, line numbers or exact signatures. Trivia tests memory of text, and the user can grep for text.
 - **No opinion questions.** "Would you have designed it differently?" belongs in grilling.
 - **No stacked questions.** Two questions in one turn get one answered.
 
-Format:
+Format for open-ended questions:
 
 ```
 Q3 (why). <the question, one to three sentences>
+```
+
+Format for multi-option questions (when not using an interactive tool):
+
+```
+Q3 (why). <the question, one to three sentences>
+
+A) <option 1>
+B) <option 2>
+C) <option 3>
+D) <option 4>
 ```
 
 A bad question. "What does `resolveOfferLetterTexts` do?" It leaks the name, and knowing what a function does from its name is trivia.
@@ -64,8 +86,8 @@ Q4 (how). <next question>
 
 - **Right.** One line at most. No praise, no "and also". Praise and elaboration are both you talking when they should be.
 - **Partly.** Name the missing piece, not the whole answer.
-- **Wrong.** The correct answer with its citation. Then **requeue the concept** and ask it again later in the session in a different form, a what-if instead of a how. One correction does not fix a wrong answer. A second retrieval later does.
-- **"Don't know", first time.** A hint, not the answer. Narrow the space, point at a file to open, or offer three options of equal length so the formatting gives nothing away. Then wait.
+- **Wrong.** The correct answer with its citation. If multi-option, note why the selected distractor failed. Then **requeue the concept** and ask it again later in the session in a different form, a what-if instead of a how. One correction does not fix a wrong answer. A second retrieval later does.
+- **"Don't know", first time.** A hint, not the answer. Narrow the space, point at a file to open, or present the question with options so the user can reason through choices.
 - **"Don't know", second time.** The answer, then requeue.
 - **The user disagrees with your key.** Go back to the source before insisting. If they were right, say so and fix the map. Your read is the answer key only as long as it survives contact with the code.
 
@@ -76,6 +98,7 @@ Keep your text short. If a turn has more of your words than the user's, the dril
 - `--quick` asks five questions on root concepts only. Enough for standup.
 - The default asks around ten questions, or stops when every concept has passed once, whichever comes first.
 - `--deep` runs until every concept has passed at the what-if level, requeues included. For the thing the user is about to build or review.
+- `--options` runs questions with multiple choices, triggering interactive question pickers in Claude Code CLI and Desktop.
 
 Stop early if the user asks. Still do the close.
 
@@ -87,9 +110,9 @@ Then produce the final session report with an overall score, a question-by-quest
 
 ### Scoring rules
 
-- **Right (1.0):** User retrieved the core mechanism or cause cleanly on the first ask.
-- **Partly (0.5):** User retrieved part of the mechanism but missed a required piece or needed a hint.
-- **Wrong (0.0):** User missed the concept, guessed incorrectly, or gave up. Requeued attempts that pass can earn back up to 0.5 for recovery, but note the initial miss.
+- **Right (1.0):** User retrieved the core mechanism cleanly or picked the correct option on the first ask.
+- **Partly (0.5):** User retrieved part of the mechanism, picked an option after a hint, or needed a second attempt.
+- **Wrong (0.0):** User missed the concept, picked an incorrect distractor, or gave up. Requeued attempts that pass can earn back up to 0.5 for recovery, but note the initial miss.
 - Calculate the final score as total points earned divided by total points possible, expressed as both a fraction and a percentage. Include a one-sentence assessment of readiness to touch the code.
 
 ### Report format
@@ -104,7 +127,7 @@ Readiness: <one sentence assessment based on the score and missed concepts>
 
 #### Q1 (<level>): <question summary or concept name>
 - **Score:** ✅ Right (1.0/1.0) | 🟡 Partly (0.5/1.0) | ❌ Wrong (0.0/1.0)
-- **Score reasoning:** <why this score was awarded, contrasting what the user said against the required concept>
+- **Score reasoning:** <why this score was awarded, including which option was selected if multi-choice and why it was right or wrong>
 - **Domain explanation:** <the model's thorough explanation of how this part of the domain works, the underlying mechanisms, why it was built this way, and citations (file:line, ticket, or PR)>
 
 [Repeat for every question asked]
